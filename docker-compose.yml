@@ -1,0 +1,42 @@
+version: '2'
+
+services:
+  crowi:
+    image: bakudankun/crowi:1.5.2
+    volumes:
+      - ./data/crowi:/data
+    environment:
+      PASSWORD_SEED:
+    links:
+      - mongo:db
+      - redis:redis
+      - elasticsearch:es
+    ports:
+      - 3000:3000
+    restart: always
+
+  mongo:
+    image: mongo:3.4.0
+    volumes:
+      - ./data/mongo:/data/db
+    restart: always
+
+  redis:
+    image: redis:3.2.6-alpine
+    volumes:
+      - ./data/redis:/data
+    restart: always
+
+  elasticsearch:
+    image: elasticsearch:2.4.2-alpine
+    volumes:
+      - ./data/elasticsearch:/usr/share/elasticsearch/data
+    restart: always
+    entrypoint:
+      - bash
+      - -c
+      - >-
+        bin/plugin list | grep -q analysis-kuromoji
+        || bin/plugin install analysis-kuromoji
+        && exec /docker-entrypoint.sh $$0 $$@
+    command: elasticsearch
